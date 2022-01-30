@@ -22,7 +22,6 @@ dishRouter.route('/')
 .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin,(req, res, next) => {
     Dishes.create(req.body)
     .then((dish) => {
-        console.log('Dish Created ', dish);
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
         res.json(dish);
@@ -46,7 +45,6 @@ dishRouter.route('/')
 dishRouter.route('/:dishId')
 .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
 .get(cors.cors, (req,res,next) => {
-    console.log("req",req.params);
     Dishes.findById(req.params.dishId)
     .populate('comments.author')
     .then((dish) => {
@@ -84,11 +82,9 @@ dishRouter.route('/:dishId')
 dishRouter.route('/:dishId/comments')
 .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
 .get(cors.cors, (req,res,next) => {
-    console.log("req.params",req);
     Dishes.findById(req.params.dishId)
     .populate('comments.author')
     .then((dish) => {
-        console.log("dishes",dish);
         if (dish != null) {
             res.statusCode = 200;
             res.setHeader('Content-Type', 'application/json');
@@ -103,16 +99,13 @@ dishRouter.route('/:dishId/comments')
     .catch((err) => next(err));
 })
 .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    console.log("req.params",req);
     Dishes.findById(req.params.dishId)
     .then((dish) => {
-        console.log("dishes",dish);
         if (dish != null) {
             req.body.author = req.user._id;
             // we get user._id by verifyUser after authentication jwt would
             // have loaded the user information into the request body in the form of req.user
             dish.comments.push(req.body);
-            console.log("final Dish",dish);
             dish.save()
             .then((dish) => {
                 Dishes.findById(dish._id)
@@ -163,7 +156,6 @@ dishRouter.route('/:dishId/comments')
 dishRouter.route('/:dishId/comments/:commentId')
 .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
 .get(cors.cors, (req,res,next) => {
-    console.log("req",req);
     Dishes.findById(req.params.dishId)
     .populate('comments.author')
     .then((dish) => {
