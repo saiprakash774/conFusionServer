@@ -46,6 +46,7 @@ dishRouter.route('/')
 dishRouter.route('/:dishId')
 .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
 .get(cors.cors, (req,res,next) => {
+    console.log("req",req.params);
     Dishes.findById(req.params.dishId)
     .populate('comments.author')
     .then((dish) => {
@@ -79,12 +80,15 @@ dishRouter.route('/:dishId')
     }, (err) => next(err))
     .catch((err) => next(err));
 });
+
 dishRouter.route('/:dishId/comments')
 .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
 .get(cors.cors, (req,res,next) => {
+    console.log("req.params",req);
     Dishes.findById(req.params.dishId)
     .populate('comments.author')
     .then((dish) => {
+        console.log("dishes",dish);
         if (dish != null) {
             res.statusCode = 200;
             res.setHeader('Content-Type', 'application/json');
@@ -99,13 +103,16 @@ dishRouter.route('/:dishId/comments')
     .catch((err) => next(err));
 })
 .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    console.log("req.params",req);
     Dishes.findById(req.params.dishId)
     .then((dish) => {
+        console.log("dishes",dish);
         if (dish != null) {
             req.body.author = req.user._id;
             // we get user._id by verifyUser after authentication jwt would
             // have loaded the user information into the request body in the form of req.user
             dish.comments.push(req.body);
+            console.log("final Dish",dish);
             dish.save()
             .then((dish) => {
                 Dishes.findById(dish._id)
@@ -156,6 +163,7 @@ dishRouter.route('/:dishId/comments')
 dishRouter.route('/:dishId/comments/:commentId')
 .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
 .get(cors.cors, (req,res,next) => {
+    console.log("req",req);
     Dishes.findById(req.params.dishId)
     .populate('comments.author')
     .then((dish) => {
@@ -222,29 +230,29 @@ dishRouter.route('/:dishId/comments/:commentId')
     Dishes.findById(req.params.dishId)
     .then((dish) => {
         if(req.user._id.equals(dish.comments.id(req.params.commentId).author._id)){
-        if (dish != null && dish.comments.id(req.params.commentId) != null) {
-            dish.comments.id(req.params.commentId).remove();
-            dish.save()
-            .then((dish) => {
-                Dishes.findById(dish._id)
-                .populate('comments.author')
-                .then((dish) => {
-                    res.statusCode = 200;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.json(dish);  
-                })               
-            }, (err) => next(err));
-        }
-        else if (dish == null) {
-            err = new Error('Dish ' + req.params.dishId + ' not found');
-            err.status = 404;
-            return next(err);
-        }
-        else {
-            err = new Error('Comment ' + req.params.commentId + ' not found');
-            err.status = 404;
-            return next(err);            
-        }
+            if (dish != null && dish.comments.id(req.params.commentId) != null) {
+                dish.comments.id(req.params.commentId).remove();
+                dish.save()
+                    .then((dish) => {
+                        Dishes.findById(dish._id)
+                            .populate('comments.author')
+                            .then((dish) => {
+                                res.statusCode = 200;
+                                res.setHeader('Content-Type', 'application/json');
+                                res.json(dish);
+                            })
+                    }, (err) => next(err));
+            }
+            else if (dish == null) {
+                err = new Error('Dish ' + req.params.dishId + ' not found');
+                err.status = 404;
+                return next(err);
+            }
+            else {
+                err = new Error('Comment ' + req.params.commentId + ' not found');
+                err.status = 404;
+                return next(err);
+            }
     }}, (err) => next(err))
     .catch((err) => next(err));
 });
